@@ -1,0 +1,328 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiva Sai Enterprises - Innovative Packaging Unit</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for 3D visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#2E3577', // Extracted from branding
+                        'brand-gold': '#A87A44', // Premium packaging accents
+                        'brand-green': '#1E523A', // Official and environmental accents
+                        'brand-dark': '#111827',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #f8fafc;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 550px;
+            position: relative;
+            background: radial-gradient(circle at center, #ffffff 0%, #f1f5f9 100%);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.03);
+            cursor: grab;
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 40px -10px rgba(46, 53, 119, 0.12);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2E3577 0%, #A87A44 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(46, 53, 119, 0.95);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translate(-50%, -100%) scale(0.9);
+            margin-top: -15px;
+            z-index: 50;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(46, 53, 119, 0.95) transparent transparent transparent;
+        }
+        
+        /* Custom Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2E3577;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Floating elements animations */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float-slow 6s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex flex-col min-h-screen font-sans">
+
+    <!-- Sticky Header -->
+    <header class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b-4 border-brand-blue transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center">
+                    <div class="flex flex-col justify-center">
+                        <h1 class="font-heading text-2xl sm:text-3xl font-black text-brand-blue tracking-tight uppercase flex items-center gap-2">
+                            <span class="bg-brand-blue text-white p-1 rounded"><i class="fa-solid fa-cube text-xl"></i></span>
+                            Shiva Sai Enterprises
+                        </h1>
+                        <p class="text-brand-gold font-extrabold text-[10px] sm:text-xs tracking-widest uppercase mt-0.5">
+                            Innovative Packaging Unit
+                        </p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#about" class="text-gray-600 hover:text-brand-blue font-semibold transition-colors duration-200">About Us</a>
+                    <a href="#products" class="text-gray-600 hover:text-brand-blue font-semibold transition-colors duration-200">3D Design lab</a>
+                    <a href="#calculator" class="text-gray-600 hover:text-brand-blue font-semibold transition-colors duration-200">Quote Gen</a>
+                    <a href="#contact" class="text-gray-600 hover:text-brand-blue font-semibold transition-colors duration-200">Contact</a>
+                    <a href="tel:9010225000" class="bg-brand-blue hover:bg-brand-dark text-white px-5 py-2.5 rounded-full font-bold transition-all shadow-md flex items-center gap-2 hover:scale-[1.02]">
+                        <i class="fa-solid fa-phone text-brand-gold"></i> Call 9010225000
+                    </a>
+                </nav>
+                <!-- Mobile menu toggle button -->
+                <div class="flex items-center md:hidden">
+                    <button id="mobile-menu-btn" type="button" class="text-gray-600 hover:text-brand-blue focus:outline-none p-2" aria-label="Menu">
+                        <i class="fa-solid fa-bars text-2xl" id="menu-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3 shadow-inner">
+            <a href="#about" class="block text-gray-700 hover:text-brand-blue font-medium py-1">About Us</a>
+            <a href="#products" class="block text-gray-700 hover:text-brand-blue font-medium py-1">3D Design Lab</a>
+            <a href="#calculator" class="block text-gray-700 hover:text-brand-blue font-medium py-1">Instant Price Calculator</a>
+            <a href="#contact" class="block text-gray-700 hover:text-brand-blue font-medium py-1">Contact Details</a>
+            <a href="tel:9010225000" class="block bg-brand-blue text-white text-center py-2.5 rounded-lg font-bold">
+                <i class="fa-solid fa-phone text-brand-gold mr-2"></i> Call Support
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="relative bg-brand-blue text-white overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <circle cx="2" cy="2" r="2" fill="currentColor"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#pattern)"/>
+                </svg>
+            </div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10 flex flex-col lg:flex-row items-center gap-12">
+                <div class="lg:w-1/2 text-center lg:text-left">
+                    <span class="bg-white/10 text-brand-gold px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest inline-block mb-4">Est. Premium Excellence</span>
+                    <h2 class="text-4xl sm:text-5xl font-extrabold mb-6 leading-tight font-heading">
+                        Premium Quality <br><span class="text-brand-gold">Labels & Seals</span>
+                    </h2>
+                    <p class="text-base sm:text-lg text-blue-100 mb-8 max-w-lg mx-auto lg:mx-0">
+                        Specializing in high-end bespoke packaging solutions for chocolates, luxury cookies, and artisanal confectionery. Elevate your brand with our custom design systems.
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                        <a href="#products" class="bg-brand-gold hover:bg-amber-600 text-white px-8 py-3.5 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1 text-center">
+                            Explore 3D Design Lab
+                        </a>
+                        <a href="#calculator" class="bg-transparent border-2 border-white/60 hover:border-white hover:bg-white hover:text-brand-blue text-white px-8 py-3.5 rounded-full font-bold transition-all text-center">
+                            Instant Calculator
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:w-1/2 flex justify-center">
+                   <div class="glass-panel p-4 sm:p-6 rounded-3xl w-full max-w-md shadow-2xl relative transform rotate-1 hover:rotate-0 transition duration-500">
+                        <div class="absolute -top-4 -right-4 bg-brand-gold text-white w-16 h-16 rounded-full flex flex-col items-center justify-center font-bold shadow-lg border-4 border-white transform rotate-12 z-10">
+                            <span class="text-[9px] uppercase tracking-tighter leading-none">GSTIN</span>
+                            <span class="text-[11px] font-extrabold">VERIFIED</span>
+                        </div>
+                        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-tr from-brand-blue/30 to-brand-gold/20 p-2">
+                            <!-- Procedurally generated premium card art representing branding -->
+                            <div class="bg-white rounded-xl p-6 text-gray-800 shadow-sm border border-brand-gold/20 flex flex-col gap-4">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-xs bg-brand-green/10 text-brand-green font-bold px-2 py-1 rounded">ISO 9001 Unit</span>
+                                    <i class="fa-solid fa-stamp text-2xl text-brand-gold"></i>
+                                </div>
+                                <div class="space-y-2 py-4">
+                                    <div class="h-2 w-1/3 bg-brand-gold/30 rounded"></div>
+                                    <div class="text-xl font-bold text-brand-blue font-heading">Shiva Sai Premium Packaging</div>
+                                    <div class="h-2 w-3/4 bg-gray-200 rounded"></div>
+                                </div>
+                                <div class="border-t border-dashed border-gray-200 pt-4 flex justify-between items-center text-xs text-gray-500">
+                                    <span>Chocolate & Cookie Seals</span>
+                                    <strong class="text-brand-blue font-bold">100% Recyclable</strong>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16 bg-white border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto mb-16">
+                    <span class="text-brand-blue font-bold text-sm tracking-wider uppercase bg-blue-50 px-3 py-1 rounded-full">WHO WE ARE</span>
+                    <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Pioneering Packaging Technology</h2>
+                    <p class="text-gray-600 mt-4 text-base">At Shiva Sai Enterprises, we design custom labels, high-barrier fresh-lock seals, and bespoke premium display boxes that protect confectionery quality while setting brands apart on the shelves.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center hover:shadow-md transition">
+                        <div class="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center text-xl text-brand-blue mx-auto mb-4">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Fresh-Lock Security</h3>
+                        <p class="text-gray-600 text-sm">Industrial-grade seal technology prevents moisture transfer, preserving crispness and rich gourmet aroma indefinitely.</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center hover:shadow-md transition">
+                        <div class="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center text-xl text-brand-gold mx-auto mb-4">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Artistic Detailing</h3>
+                        <p class="text-gray-600 text-sm">Fine metallic foil accents and deep embossing for luxury visual contrast that commands a premium look.</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-center hover:shadow-md transition">
+                        <div class="w-12 h-12 bg-brand-green/10 rounded-xl flex items-center justify-center text-xl text-brand-green mx-auto mb-4">
+                            <i class="fa-solid fa-leaf"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Eco-Conscious Elements</h3>
+                        <p class="text-gray-600 text-sm">Committed to sustainability through compostable substrates, vegetable ink designs, and optimized logistics.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive 3D Product Section -->
+        <section id="products" class="py-16 bg-slate-50 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-10">
+                <span class="text-brand-gold font-bold text-sm tracking-wider uppercase bg-yellow-50 px-3 py-1 rounded-full">INTERACTIVE LAB</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">Interactive Product Showcase</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto mt-2">Rotate and zoom inside our digital sandbox to inspect 3D prototypes of our custom product lines.</p>
+            </div>
+            
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200 bg-white">
+                    
+                    <!-- 3D UI Overlay Controls -->
+                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                        <button id="btn-choc" class="bg-brand-blue text-white px-4 py-3 rounded-xl text-sm font-bold shadow hover:bg-opacity-95 transition-all w-48 text-left flex justify-between items-center ring-2 ring-brand-gold/60">
+                            <span>Chocolate Box</span> <i class="fa-solid fa-box text-brand-gold"></i>
+                        </button>
+                        <button id="btn-cookie" class="bg-white text-gray-700 px-4 py-3 rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all w-48 text-left flex justify-between items-center border border-gray-100">
+                            <span>Cookie Jar Seal</span> <i class="fa-solid fa-jar text-brand-blue"></i>
+                        </button>
+                        <button id="btn-label" class="bg-white text-gray-700 px-4 py-3 rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all w-48 text-left flex justify-between items-center border border-gray-100">
+                            <span>Premium Label</span> <i class="fa-solid fa-tag text-brand-gold"></i>
+                        </button>
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 z-10 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl text-xs font-semibold text-gray-600 shadow-md flex items-center gap-3 border border-gray-100">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-rotate text-brand-blue animate-spin-slow"></i> Auto-rotate</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" id="auto-rotate-toggle" class="sr-only peer" checked>
+                          <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-blue"></div>
+                        </label>
+                    </div>
+
+                    <div id="loading-overlay" class="absolute inset-0 bg-slate-50/90 z-20 flex flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-500">
+                        <div class="loader mb-4"></div>
+                        <p class="text-brand-blue font-bold tracking-wider">Compiling WebGL Materials...</p>
+                    </div>
+
+                    <div id="tooltip" class="tooltip">Description</div>
+                    
+                    <!-- The 3D Canvas -->
+                    <div id="canvas-container"></div>
+                </div>
+                <div class="mt-4 text-center text-xs text-gray-500 flex justify-center items-center gap-4">
+                    <span><i class="fa-solid fa-arrow-pointer mr-1 text-brand-gold"></i> Drag to Rotate</span>
+                    <span><i class="fa-solid fa-magnifying-glass mr-1 text-brand-blue"></i> Scroll / Pinch to Zoom</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Instant Cost Calculator -->
+        <section id="calculator" class="py-16 bg-white">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="text-brand-green font-bold text-sm tracking-wider uppercase bg-green-50 px-3 py-1 rounded-full">REALTIME QUOTATION</span>
+                    <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Instant Packaging Cost Calculator</h2>
+                    <p class="text-gray-500 mt-2">Estimate costs immediately by adjusting your
